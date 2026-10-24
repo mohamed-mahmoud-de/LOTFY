@@ -1,7 +1,5 @@
 // Remote jobs open to EMEA or anywhere. Free, no key. API has no part-time filter, so we filter here.
 const GEOS = ['emea', 'anywhere'];
-// The "emea" feed still contains single-country jobs (e.g. "Bulgaria"); keep only ones Egypt can apply to.
-const OPEN_TO_EGYPT = /anywhere|worldwide|emea|egypt|africa|middle east|mena/i;
 
 export async function fetchJobicy() {
   const lists = await Promise.all(GEOS.map(async (geo) => {
@@ -10,7 +8,7 @@ export async function fetchJobicy() {
     return (await res.json()).jobs ?? [];
   }));
   return lists.flat()
-    .filter((j) => j.jobType?.includes('Part-Time') && OPEN_TO_EGYPT.test(j.jobGeo))
+    .filter((j) => j.jobType?.includes('Part-Time'))
     .map((j) => ({
       id: `jobicy:${j.id}`,
       source: 'Jobicy',
@@ -19,10 +17,10 @@ export async function fetchJobicy() {
       location: j.jobGeo,
       remote: true,
       type: 'Part-Time',
-      description: j.jobExcerpt,
+      description: j.jobDescription || j.jobExcerpt,
       url: j.url,
       logo: j.companyLogo,
-      salary: j.salaryMin ? `${j.salaryMin}–${j.salaryMax ?? '?'} ${j.salaryCurrency ?? ''}/${j.salaryPeriod ?? ''}` : null,
+      pay: { min: j.salaryMin, max: j.salaryMax, currency: j.salaryCurrency, period: j.salaryPeriod },
       postedAt: new Date(j.pubDate),
     }));
 }

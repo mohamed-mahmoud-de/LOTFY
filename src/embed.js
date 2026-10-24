@@ -39,25 +39,35 @@ export const plain = (html = '') =>
   html
     .replace(/<(br|\/p|\/li|\/h\d)\s*\/?>/gi, '\n')
     .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/Â(?=[\s ])/g, '') // Remote OK double-encodes non-breaking spaces as "Â "
+    .replace(/&nbsp;| /g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"').replace(/&#0?39;|&rsquo;|&lsquo;/g, "'").replace(/&hellip;/g, '…')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+
+// { min, max, currency, period } -> "25 USD / hourly", "350+ USD / monthly", "84,000–97,000 USD / yearly"
+export function payText(pay) {
+  const [min, max] = [Number(pay?.min) || 0, Number(pay?.max) || 0];
+  if (!min && !max) return null;
+  const n = (v) => v.toLocaleString('en-US');
+  const range = !max ? `${n(min)}+` : !min ? `up to ${n(max)}` : min === max ? n(min) : `${n(min)}–${n(max)}`;
+  return [range, pay.currency, pay.period && `/ ${pay.period}`].filter(Boolean).join(' ');
+}
 
 export function jobEmbed(job) {
   const tech = isTech(job);
   const embed = new EmbedBuilder()
     .setColor(tech ? 0x5865f2 : 0xf39c12)
     .setAuthor({ name: tech ? '🖥️ Technical part-time job' : '🧹 Non-technical part-time job' })
-    .setTitle(clip(job.title, 256))
+    .setTitle(clip(plain(job.title), 256))
     .setURL(job.url)
     .setDescription(`*${pick(tech ? TECH_INTROS : NON_TECH_INTROS)}*\n\n${clip(plain(job.description), 600) || 'No description. Living dangerously.'}`)
     .addFields(
-      { name: '🏢 Company', value: clip(job.company || 'Anonymous (suspicious)', 1024), inline: true },
+      { name: '🏢 Company', value: clip(plain(job.company) || 'Anonymous (suspicious)', 1024), inline: true },
       { name: '📍 Location', value: clip(job.location || 'Somewhere on Earth', 1024), inline: true },
       { name: '🏠 Workplace', value: workplace(job), inline: true },
       { name: '⏰ Type', value: clip(job.type || 'Part-time', 1024), inline: true },
-      { name: '💸 Pay', value: clip(job.salary || pick(NO_SALARY), 1024), inline: true },
+      { name: '💸 Pay', value: clip(payText(job.pay) || pick(NO_SALARY), 1024), inline: true },
       { name: '🔗 Apply', value: `[Open on ${job.source}](${job.url})`, inline: true },
     )
     .setFooter({ text: `${pick(FOOTERS)} • via ${job.source}` });

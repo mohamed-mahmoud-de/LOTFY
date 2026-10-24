@@ -1,9 +1,10 @@
 import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { jobEmbed } from './embed.js';
 import { pickNew } from './filter.js';
-import { fetchHimalayas } from './sources/himalayas.js';
 import { fetchJobicy } from './sources/jobicy.js';
 import { fetchJSearch } from './sources/jsearch.js';
+import { fetchRemoteOK } from './sources/remoteok.js';
+import { fetchWorkingNomads } from './sources/workingnomads.js';
 import { loadState, saveState } from './state.js';
 
 try {
@@ -22,8 +23,9 @@ const HOUR = 60 * 60 * 1000;
 const CHECK_EVERY = 0.5 * HOUR;
 // JSearch free tier is ~200 requests/month; 2 queries every 12h ≈ 120/month.
 const SOURCES = [
-  { name: 'himalayas', fetch: fetchHimalayas, every: CHECK_EVERY },
   { name: 'jobicy', fetch: fetchJobicy, every: CHECK_EVERY },
+  { name: 'remoteok', fetch: fetchRemoteOK, every: CHECK_EVERY },
+  { name: 'workingnomads', fetch: fetchWorkingNomads, every: CHECK_EVERY },
   ...(RAPIDAPI_KEY ? [{ name: 'jsearch', fetch: fetchJSearch, every: 12 * HOUR }] : []),
 ];
 if (!RAPIDAPI_KEY) console.warn('RAPIDAPI_KEY not set: skipping JSearch (no LinkedIn/Indeed/local jobs).');

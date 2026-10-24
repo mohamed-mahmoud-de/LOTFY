@@ -8,9 +8,12 @@ Every 30 minutes Lofty checks the job sources, filters to fresh part-time jobs, 
 
 | Source | Covers | Key needed |
 |---|---|---|
-| [Himalayas](https://himalayas.app) | Remote part-time jobs open to Egypt | No |
 | [Jobicy](https://jobicy.com) | Remote part-time jobs open to EMEA or anywhere | No |
+| [Remote OK](https://remoteok.com) | Remote jobs that mention part-time | No |
+| [Working Nomads](https://www.workingnomads.com) | Remote jobs that mention part-time (links straight to the employer) | No |
 | [JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) | Google for Jobs: LinkedIn, Indeed, Glassdoor, Wuzzuf… in Alexandria (English + Arabic queries) | `RAPIDAPI_KEY` (free tier) |
+
+Every source is free to apply through. Himalayas was dropped because applying there needs a paid plan. Lofty only posts jobs that are open to Egypt and written in English or Arabic.
 
 LinkedIn and Indeed have no public jobs API, and scraping them breaks their terms, so Lofty reaches them through JSearch. JSearch's free tier is about 200 requests a month, so it runs every 12 hours (≈120 requests a month).
 

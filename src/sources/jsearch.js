@@ -24,7 +24,7 @@ export async function fetchJSearch() {
     description: j.job_description,
     url: j.job_apply_link,
     logo: j.employer_logo,
-    salary: j.job_min_salary ? `${j.job_min_salary}–${j.job_max_salary ?? '?'} ${j.job_salary_currency ?? ''}/${j.job_salary_period ?? ''}` : null,
+    pay: { min: j.job_min_salary, max: j.job_max_salary, currency: j.job_salary_currency, period: j.job_salary_period },
     // Invalid Date when neither field exists; the filter keeps those (the query is already limited to this week).
     postedAt: new Date(j.job_posted_at_datetime_utc ?? j.job_posted_at_timestamp * 1000),
   }));

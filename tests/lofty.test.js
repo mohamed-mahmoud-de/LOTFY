@@ -40,6 +40,9 @@ test('part-time detection', () => {
   assert.ok(isPartTime(job({ type: undefined, title: 'كاشير بدوام جزئي' })));
   assert.ok(!isPartTime(job({ title: 'Full-time Accountant' })));
   assert.ok(!isPartTime(job({ type: 'FULLTIME', description: 'office job' })));
+  assert.ok(isPartTime(job({ type: 'دوام جزئي', title: 'مسئول مبيعات', description: '' })));
+  assert.ok(isPartTime(job({ type: 'دوام كامل', title: 'وظائف بارت تايم من المنزل' })));
+  assert.ok(!isPartTime(job({ type: 'Full-time', title: 'Teach English Online', description: 'full-time or part-time' })));
 });
 
 test('tech vs non-tech', () => {
@@ -54,6 +57,8 @@ test('tech vs non-tech', () => {
 test('workplace', () => {
   assert.equal(workplace(job()), 'On-site');
   assert.equal(workplace(job({ remote: true })), 'Remote');
+  assert.equal(workplace(job({ title: 'Teach English Online' })), 'Remote');
+  assert.equal(workplace(job({ title: 'خدمة عملاء من المنزل' })), 'Remote');
   assert.equal(workplace(job({ description: 'Hybrid, 2 days in office' })), 'Hybrid');
 });
 
@@ -62,7 +67,7 @@ test('pickNew dedupes, drops stale/seen/full-time, sorts newest first, caps', ()
     job({ id: 'a', postedAt: new Date(NOW - 5 * 3600_000) }),
     job({ id: 'b', title: 'Tutor', postedAt: new Date(NOW - 1 * 3600_000) }),
     job({ id: 'c', title: 'Tutor' }), // same title+company as b from another source
-    job({ id: 'd', title: 'Old job', postedAt: new Date(NOW - 8 * 86400_000) }),
+    job({ id: 'd', title: 'Old job', postedAt: new Date(NOW - 31 * 86400_000) }),
     job({ id: 'e', title: 'Seen job' }),
     job({ id: 'f', title: 'Full time Driver' }),
     job({ id: 'g', title: 'No date', postedAt: new Date(NaN) }),

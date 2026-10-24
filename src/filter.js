@@ -1,4 +1,5 @@
-const PART_TIME = /part[\s-]?time|دوام جزئي|بدوام جزئي/i;
+const PART_TIME = /part[\s-]?time|دوام جزئي|بارت ?تايم/i;
+const REMOTE = /remote|online|work from home|من المنزل|عن بعد|اونلاين|أونلاين/i;
 const FULL_TIME = /full[\s-]?time|دوام كامل/i;
 const TECH = /\b(developer|engineer(ing)?|software|programmer|front[\s-]?end|back[\s-]?end|full[\s-]?stack|web|devops|qa|tester|cyber|security|network|cloud|ai|ml|machine learning|data (scien\w*|analy\w*|engineer\w*)|python|javascript|typescript|react|node(\.js)?|java|php|android|ios|ui|ux|sql|database|sysadmin)\b|مبرمج|مطور|برمجة|تقني|شبكات/i;
 const IT = /\bIT\b/; // case-sensitive, or it matches the word "it"
@@ -7,10 +8,16 @@ const OPEN_TO_EGYPT = /anywhere|worldwide|global|emea|egypt|africa|middle east|m
 const ENGLISH_WORDS = /\b(the|and|you|your|we|our|with|for|to|of|is|are|will)\b/gi;
 const OTHER_WORDS = /\b(und|der|das|wir|sie|für|mit|ist|ein|eine|el|los|las|para|con|somos|una|que|et|les|nous|pour|avec|est|une|vous)\b/gi;
 const ARABIC = /[؀-ۿ]/;
-const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+// A month, not a week: Alexandria only gets a handful of part-time posts a month.
+const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
-export const isPartTime = (job) =>
-  !FULL_TIME.test(job.title) && (/part/i.test(job.type ?? '') || PART_TIME.test(`${job.title} ${job.description ?? ''}`));
+// The title wins; then a full-time title or type rules it out; then the type or description.
+// Google often labels part-time posts "full-time", so a part-time title beats the type.
+export const isPartTime = (job) => {
+  if (PART_TIME.test(job.title)) return true;
+  if (FULL_TIME.test(`${job.title} ${job.type ?? ''}`)) return false;
+  return /part/i.test(job.type ?? '') || PART_TIME.test(`${job.type ?? ''} ${job.description ?? ''}`);
+};
 
 // Title only: source categories are too noisy (recruiters get tagged as tech).
 export const isTech = (job) => TECH.test(job.title) || IT.test(job.title);
@@ -27,10 +34,10 @@ export const isEnglishOrArabic = (job) => {
 
 export const workplace = (job) => {
   if (HYBRID.test(`${job.title} ${job.description ?? ''}`)) return 'Hybrid';
-  return job.remote ? 'Remote' : 'On-site';
+  return job.remote || REMOTE.test(job.title) ? 'Remote' : 'On-site';
 };
 
-// Newest unseen part-time jobs from the last week that Egypt can apply to, in English or Arabic,
+// Newest unseen part-time jobs from the last month that Egypt can apply to, in English or Arabic,
 // de-duplicated across sources, capped so the channel isn't flooded.
 // Jobs over the cap stay unseen and go out next cycle.
 export function pickNew(jobs, seen, { now = Date.now(), limit = 10 } = {}) {

@@ -5,15 +5,19 @@ const QUERIES = ['part time jobs in Alexandria, Egypt', 'وظائف دوام ج�
 export async function fetchJSearch() {
   const key = process.env.RAPIDAPI_KEY;
   if (!key) return [];
-  const lists = await Promise.all(QUERIES.map(async (query) => {
+  // One at a time with a pause: firing both at once hits RapidAPI's per-second limit (HTTP 429).
+  const jobs = [];
+  for (const [i, query] of QUERIES.entries()) {
+    if (i) await new Promise((r) => setTimeout(r, 1500));
     const params = new URLSearchParams({ query, country: 'eg', employment_types: 'PARTTIME', date_posted: 'week', num_pages: '1' });
     const res = await fetch(`https://jsearch.p.rapidapi.com/search?${params}`, {
       headers: { 'x-rapidapi-key': key, 'x-rapidapi-host': 'jsearch.p.rapidapi.com' },
     });
+    if (res.status === 403) throw new Error('JSearch 403: subscribe to the free Basic plan at rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch/pricing');
     if (!res.ok) throw new Error(`JSearch HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
-    return (await res.json()).data ?? [];
-  }));
-  return lists.flat().map((j) => ({
+    jobs.push(...((await res.json()).data ?? []));
+  }
+  return jobs.map((j) => ({
     id: `jsearch:${j.job_id}`,
     source: j.job_publisher ? `${j.job_publisher} (via JSearch)` : 'JSearch',
     title: j.job_title,
